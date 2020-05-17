@@ -1,0 +1,80 @@
+{% extends 'web/public/layout.html' %}
+{% block title %}
+    请填写问卷调查
+{% endblock %}
+{% block page-content %}
+    <div class="container">
+        <div  v-for="(item, index) in survey.survey_templates">
+            <div>
+            <h3>{% verbatim %} {{ item.name }}问题{% endverbatim %}</h3>
+            </div>
+            <hr/>
+            <div>
+                <el-form ref="form" :model="form" label-width="400px" label-position="top">
+                    <el-form-item v-for="(question, index) in item.questions" :label="question.title" :error="question.error">
+                        <el-input style="width: 50%" v-if="question.survey_type == 'suggest'" type="textarea" v-model="question.value"></el-input>
+                        <el-radio-group label-width="auto" v-if="question.survey_type == 'choice'" v-model="question.value">
+                            <el-radio v-for="(choice,index) in question.choices" :label="choice.id">
+                                {% verbatim %} {{ choice.title }}{% endverbatim %}
+                            </el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+        <el-button type="primary" @click="onSubmit">提交问卷</el-button>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+      new Vue({
+          "el": "#app",
+          data() {
+              return {
+                form: {
+                  resource: '',
+                  desc: ''
+                },
+                survey: {}
+              }
+          },
+        mounted(){
+            this.initData()
+        },
+        methods: {
+          onSubmit() {
+              axios.post(`{{ BASE_URL }}/api/surveys/{{ pk }}`, this.survey)
+                  .then(
+                      (response)=>{
+                          if(response.data.code === 1){
+                              console.log(response.data.errors)
+                              let errors = response.data.errors.survey_templates
+                              for(let i=0;i < errors.length;i++){
+                                  if(errors[i]["questions"]){
+                                      for(let j=0;j<errors[i]["questions"].length;j++){
+                                        this.survey['survey_templates'][i]["questions"][j].error = errors[i]['questions'][j]["value"]
+                                    }
+                                  }
+                              }
+                          }else{
+
+                          }
+                      }
+                  )
+            },
+            initData(){
+              // 初始化数据
+              axios.get(`{{ BASE_URL }}/api/surveys/{{ pk }}`)
+                  .then(
+                      (response)=>{
+                          this.survey = response.data
+                      }
+                  )
+            }
+        }
+      })
+
+    </script>
+{% endblock %}
