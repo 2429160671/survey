@@ -7,6 +7,11 @@ import os
 import xlwt
 
 
+class TestView(TemplateView):
+
+    template_name = "web/test.html"
+
+
 class IndexView(TemplateView):
 
     template_name = "web/index.html"
