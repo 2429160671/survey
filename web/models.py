@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.crypto import get_random_string
+
 
 # Create your models here.
 
@@ -20,6 +22,22 @@ class Survey(models.Model):
     survey_templates = models.ManyToManyField("SurveyTemplate", verbose_name="针对哪几个角色的问卷调查",blank=True)
     count = models.PositiveSmallIntegerField(verbose_name="生成多少唯一码")
     date = models.DateTimeField(auto_now_add=True)
+    created = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        # 创建问卷调查表时候创建唯一码
+        super().save(*args, **kwargs)
+        if not self.created:
+            codes = []
+            count = self.count
+            while count:
+                code = get_random_string(8)
+                if SurveyCode.objects.filter(unique_code=code).exists():  # 已经存在了
+                    continue
+                codes.append(SurveyCode(unique_code=code, survey=self))
+                count -= 1
+            SurveyCode.objects.bulk_create(codes)
+            print("msg: 批量创建成功")
 
 
 class SurveyCode(models.Model):
@@ -69,8 +87,8 @@ class SurveyRecord(models.Model):
     """
     问卷记录表
     """
-    question = models.ForeignKey("SurveyQuestion", on_delete=models.CASCADE,verbose_name="哪一个问题")
-    survey_template = models.ForeignKey("SurveyTemplate", verbose_name="哪一个角色的", on_delete=models.CASCADE)
+    question = models.ForeignKey("SurveyQuestion", null=True, on_delete=models.CASCADE,verbose_name="哪一个问题")
+    survey_template = models.ForeignKey("SurveyTemplate", null=True, verbose_name="哪一个角色的", on_delete=models.CASCADE)
     survey_code = models.ForeignKey("SurveyCode", on_delete=models.CASCADE)
     survey = models.ForeignKey("Survey", on_delete=models.CASCADE, verbose_name="那一次问卷调查")
     choice = models.ForeignKey("SurveyChoice", on_delete=models.CASCADE, null=True, blank=True, verbose_name="问题的选项")

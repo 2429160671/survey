@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework import filters
 from web import models
 from ..serializers import basic
@@ -7,6 +7,7 @@ from rest_framework import pagination
 from django.conf import settings
 from rest_framework.response import Response
 import math
+from django.db.models import Sum
 
 
 class MYFilter(filters.BaseFilterBackend):
@@ -21,6 +22,7 @@ class MYFilter(filters.BaseFilterBackend):
         pass
 
 
+# 获取主页数据
 class SurveyApi(ListAPIView):
     """
     model,序列化器
@@ -111,8 +113,25 @@ class SurveyDetailApi(RetrieveAPIView, CreateAPIView):
                 "errors": serializer.errors
             })
 
-    # 改写retrieve方法，返回单条数据
+    # # 改写retrieve方法，返回单条数据
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
+
+
+# 问卷报告
+class SurveysReportApi(RetrieveAPIView):
+
     def retrieve(self, request, *args, **kwargs):
-        instance = self.get_queryset().filter(pk=kwargs["pk"])
-        serializer = self.get_serializer(instance, many=True)
-        return Response(serializer.data[0])
+        # 查询当前调查问卷下每一个问题的总分值
+        result = models.SurveyRecord.objects.filter(
+            question__survey_type="choice", survey=kwargs.get("pk"))\
+            .values("question__title") \
+            .annotate(Sum("score"))
+        return Response({
+            "code": 0,
+            "data": list(result)
+        })
+
+

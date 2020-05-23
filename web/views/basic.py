@@ -17,14 +17,16 @@ class DownloadView(TemplateView):
     # 下载当前问卷调查的唯一码文件
     def get(self, request, *args, **kwargs):
         # 只取出unique_code
-        codes = models.SurveyCode.objects.filter(survey=kwargs.get("pk")).only("unique_code")
+        codes = models.SurveyCode.objects.filter(survey=kwargs.get("pk")).values_list("unique_code")
+        codes = list(codes)
+        survey_name = models.Survey.objects.filter(id=kwargs.get("pk")).values_list("name")[0]
         # 存储到excel
         book = xlwt.Workbook()
         table = book.add_sheet("sheet1")
         table.write(0, 0, "唯一码号")
         # 迭代遍历，节省内存
-        for index, code in enumerate(codes.iterator(), 1):
-            table.write(index, 0, code.unique_code)
+        for index, code in enumerate(codes, 1):
+            table.write(index, 0, code)
         book.save("唯一码.xls")
 
         # 文件流
@@ -38,7 +40,7 @@ class DownloadView(TemplateView):
         response['Content-Type'] = 'application/octet-stream'
         # 内容描述
         response['Content-Disposition'] = 'attachment; {}'.format(
-            "filename*=utf-8''{}".format(quote("唯一码.xls"))
+            "filename*={}".format(quote(str(survey_name[0])+"--唯一码.xls"))
         )
 
         return response
@@ -47,4 +49,9 @@ class DownloadView(TemplateView):
 class SurveyDetailView(TemplateView):
 
     template_name = "web/detail.html"
+
+
+class SurveyReportView(TemplateView):
+
+        template_name = "web/report.html"
 

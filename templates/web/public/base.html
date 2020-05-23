@@ -5,6 +5,13 @@
     <title>问卷调查系统</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="static/js/vue.min.js"></script>
+    <script src="static/js/element-ui.js"></script>
+    <script src="static/js/axios.js"></script>
+    <script src="static/js/jquery.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/element-index.js"></script>
+    {% block import-js %}{% endblock %}
     <style>
         div.panel{
             width: 95%;
@@ -15,12 +22,6 @@
 </head>
 <body>
     {% block body%}{% endblock %}
-    <script src="/static/js/vue.min.js"></script>
-    <script src="/static/js/element-ui.js"></script>
-    <script src="/static/js/axios.js"></script>
-    <script src="/static/js/jquery.js"></script>
-    <script src="/static/js/bootstrap.min.js"></script>
-    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
-    {% block js%}{% endblock %}
+    {% block js %}{% endblock %}
 </body>
 </html>
